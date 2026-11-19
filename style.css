@@ -1,0 +1,617 @@
+/* ================= 悬浮球 ================= */
+.si-ball {
+    position: fixed;
+    right: 16px;
+    bottom: 90px;
+    z-index: 29990;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    color: #fff;
+    background: linear-gradient(145deg, #6d5efc 0%, #b44cf0 55%, #f0509b 100%);
+    box-shadow: 0 6px 20px rgba(109, 94, 252, .45), 0 2px 6px rgba(0, 0, 0, .35);
+    transition: transform .18s cubic-bezier(.34, 1.56, .64, 1), box-shadow .18s ease;
+    touch-action: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.si-ball::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, #6d5efc, #b44cf0, #f0509b, #ffb86b, #6d5efc);
+    opacity: 0;
+    z-index: -1;
+    transition: opacity .2s ease;
+}
+
+.si-ball:hover {
+    transform: translateY(-2px) scale(1.06);
+    box-shadow: 0 10px 26px rgba(109, 94, 252, .55), 0 2px 8px rgba(0, 0, 0, .4);
+}
+
+.si-ball:hover::after,
+.si-ball.si-active::after {
+    opacity: .85;
+    animation: si-rotate 3.6s linear infinite;
+}
+
+.si-ball:active { cursor: grabbing; }
+.si-ball.si-dragging { transition: none; transform: scale(1.08); }
+
+.si-ball-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .25));
+}
+
+.si-ball-badge {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.si-ball.si-busy .si-ball-badge {
+    border: 2px solid rgba(255, 255, 255, .25);
+    border-top-color: #fff;
+    animation: si-rotate .9s linear infinite;
+}
+
+@keyframes si-rotate { to { transform: rotate(360deg); } }
+
+/* ================= 面板 ================= */
+.si-panel {
+    position: fixed;
+    right: 12px;
+    bottom: 148px;
+    z-index: 29995;
+    width: min(680px, calc(100vw - 16px));
+    max-height: calc(100vh - 172px);
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    /* min-height:0 让 flex 子项可以收缩，否则内部滚动永远不会触发 */
+    min-height: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    background: rgba(22, 22, 30, .93);
+    backdrop-filter: blur(22px) saturate(1.5);
+    -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, .1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .04);
+    color: #e8e8f0;
+    font-size: .95em;
+    line-height: 1.5;
+    transform-origin: bottom right;
+    animation: si-pop .2s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.si-panel.si-hidden { display: none !important; }
+
+/* fallback 环境（样式表部分被宿主剥离）仍要能正常布局 */
+.si-panel.si-fallback:not(.si-hidden) { display: flex; }
+
+@keyframes si-pop {
+    from { opacity: 0; transform: scale(.94) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.si-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, rgba(109, 94, 252, .28), rgba(240, 80, 155, .18));
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    cursor: grab;
+    touch-action: none;
+    flex: 0 0 auto;
+    min-height: 0;
+}
+
+.si-head:active { cursor: grabbing; }
+
+.si-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 600;
+    letter-spacing: .3px;
+    color: #fff;
+}
+
+.si-head-actions { display: flex; gap: 4px; }
+
+.si-icon-btn {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .08);
+    color: #d8d8e4;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+
+.si-icon-btn:hover { background: rgba(255, 255, 255, .18); color: #fff; }
+
+.si-body {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    /* flex:1 1 auto + min-height:0 是滚动生效的必要条件 */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, .35) transparent;
+}
+
+.si-body::-webkit-scrollbar { width: 8px; }
+.si-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .34); border-radius: 4px; }
+.si-body::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, .5); }
+.si-body::-webkit-scrollbar-track { background: transparent; }
+
+/* --------- 快捷按钮 --------- */
+.si-quick { display: flex; gap: 7px; flex: 0 0 auto; flex-wrap: wrap; }
+.si-quick .si-main-btn { min-width: 132px; }
+
+.si-main-btn {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1em;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    background: linear-gradient(135deg, #6d5efc, #b44cf0 60%, #f0509b);
+    box-shadow: 0 4px 14px rgba(109, 94, 252, .4);
+    transition: transform .12s, box-shadow .18s, filter .18s;
+}
+
+.si-main-btn:hover { filter: brightness(1.08); box-shadow: 0 6px 20px rgba(109, 94, 252, .55); }
+.si-main-btn:active { transform: scale(.97); }
+
+.si-ghost-btn {
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: rgba(255, 255, 255, .06);
+    color: #d6d6e2;
+    font-size: .88em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, border-color .15s, color .15s;
+}
+
+.si-ghost-btn:hover {
+    background: rgba(255, 255, 255, .13);
+    border-color: rgba(255, 255, 255, .26);
+    color: #fff;
+}
+
+.si-full { width: 100%; }
+
+/* --------- 结果区 --------- */
+.si-result {
+    flex: 0 0 auto;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, .3);
+    border: 1px solid rgba(255, 255, 255, .08);
+}
+
+.si-result.si-hidden { display: none; }
+
+.si-result-img {
+    display: block;
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    cursor: zoom-in;
+    background: #111;
+}
+
+.si-result-cap {
+    padding: 7px 9px;
+    font-size: .78em;
+    line-height: 1.4;
+    color: #9d9db0;
+    word-break: break-word;
+}
+
+.si-error {
+    padding: 10px;
+    font-size: .84em;
+    color: #ff9b9b;
+    background: rgba(255, 80, 80, .1);
+    border-left: 3px solid #ff5c5c;
+    word-break: break-word;
+}
+
+/* --------- 提示词预览 --------- */
+.si-pv {
+    flex: 0 0 auto;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .05);
+    padding: 9px;
+    font-size: .8em;
+    line-height: 1.45;
+}
+
+.si-pv.si-hidden { display: none; }
+.si-pv-title { color: #8f8fa8; margin-bottom: 3px; font-weight: 600; }
+.si-pv-body { color: #cfcfe0; word-break: break-word; margin-bottom: 8px; }
+.si-pv-body:last-child { margin-bottom: 0; }
+
+/* --------- 折叠分组 --------- */
+.si-sec {
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .035);
+    border: 1px solid rgba(255, 255, 255, .07);
+    overflow: hidden;
+}
+
+.si-sec > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 11px 14px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #dcdcea;
+    list-style: none;
+    user-select: none;
+    transition: background .15s;
+}
+
+.si-sec > summary::-webkit-details-marker { display: none; }
+.si-sec > summary:hover { background: rgba(255, 255, 255, .05); }
+
+.si-sec > summary::before {
+    content: '';
+    width: 0; height: 0;
+    border-left: 5px solid #8f8fa8;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    transition: transform .18s;
+    flex: 0 0 auto;
+}
+
+.si-sec[open] > summary::before { transform: rotate(90deg); }
+
+.si-sec-hint {
+    font-size: .78em;
+    font-weight: 400;
+    color: #7d7d94;
+    margin-left: auto;
+    margin-right: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.si-fields {
+    padding: 13px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* --------- 表单 --------- */
+.si-f {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    min-width: 0;
+}
+
+.si-f > span {
+    font-size: .8em;
+    font-weight: 500;
+    color: #9d9db2;
+    letter-spacing: .2px;
+}
+
+.si-f > .text_pole,
+.si-f > select,
+.si-f > input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 11px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .06);
+    color: #eaeaf2;
+    font-size: .92em;
+    line-height: 1.45;
+    outline: none;
+    transition: border-color .15s, background .15s;
+}
+
+.si-f > .text_pole:focus,
+.si-f > select:focus,
+.si-f > input:focus {
+    border-color: rgba(140, 120, 255, .7);
+    background: rgba(255, 255, 255, .1);
+}
+
+.si-f > select option { background: #1c1c26; color: #eaeaf2; }
+
+.si-f-col {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+}
+
+.si-f-col > span { flex: none; }
+
+.si-f-col > textarea {
+    width: 100%;
+    resize: vertical;
+    font-size: .86em;
+    line-height: 1.5;
+    min-height: 46px;
+}
+
+.si-grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+    padding: 12px 13px 13px;
+}
+
+.si-grid2 .si-f { gap: 5px; }
+.si-grid2 .si-f > span { font-size: .8em; }
+.si-span2 { grid-column: 1 / -1; }
+
+.si-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: .85em;
+    color: #c8c8da;
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.si-check input[type="checkbox"] { margin-top: 2px; flex: 0 0 auto; }
+
+.si-note {
+    font-size: .78em;
+    line-height: 1.55;
+    color: #8e8ea6;
+    padding: 8px 9px;
+    border-radius: 8px;
+    background: rgba(240, 80, 155, .08);
+    border-left: 2px solid rgba(240, 80, 155, .5);
+}
+
+.si-note b { color: #f0a0c8; }
+
+.si-foot {
+    text-align: center;
+    font-size: .76em;
+    color: #6d6d84;
+    padding: 2px 0 4px;
+}
+
+.si-foot code {
+    background: rgba(255, 255, 255, .1);
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: #b8b8d0;
+}
+
+/* ================= 进度浮层 ================= */
+.si-progress {
+    position: fixed;
+    right: 18px;
+    bottom: 22px;
+    z-index: 30000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: rgba(20, 20, 28, .95);
+    color: #f0f0f8;
+    font-size: .86em;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, .5);
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+
+.si-spin {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, .25);
+    border-top-color: #b44cf0;
+    animation: si-rotate .85s linear infinite;
+    flex: 0 0 auto;
+}
+
+/* ================= 聊天内图片 ================= */
+.si-meta {
+    font-size: .78em;
+    opacity: .75;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.si-time { opacity: .7; font-size: .92em; }
+
+/* 窄屏适配 */
+@media (max-width: 600px) {
+    .si-panel {
+        width: calc(100vw - 12px);
+        right: 6px;
+        bottom: 146px;
+        max-height: 78vh;
+    }
+    .si-ball { right: 12px; bottom: 78px; width: 50px; height: 50px; }
+    .si-grid2 { grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+    .si-fields { padding: 11px 12px 12px; gap: 11px; }
+    .si-body { padding: 11px; }
+}
+
+@media (max-width: 380px) {
+    .si-grid2 { grid-template-columns: 1fr; }
+}
+
+/* --------- tag 接口子块 --------- */
+.si-tag-ext {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    background: rgba(109, 94, 252, .1);
+    border: 1px solid rgba(109, 94, 252, .25);
+}
+
+.si-tag-ext.si-hidden { display: none; }
+
+/* --------- 预览里的警告 --------- */
+.si-pv-warn {
+    font-size: .95em;
+    line-height: 1.5;
+    color: #ffcf87;
+    background: rgba(255, 180, 80, .1);
+    border-left: 2px solid rgba(255, 180, 80, .6);
+    border-radius: 6px;
+    padding: 7px 9px;
+    margin-bottom: 8px;
+    word-break: break-word;
+}
+
+.si-pv-body {
+    max-height: 168px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
+
+
+/* --------- 关闭按钮：加大点击区域 --------- */
+.si-icon-btn#si_close {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .14);
+}
+
+.si-icon-btn#si_close:hover {
+    background: rgba(255, 90, 90, .55);
+    color: #fff;
+}
+
+/* 触屏下保证最小可点尺寸 */
+@media (pointer: coarse) {
+    .si-icon-btn { min-width: 40px; min-height: 40px; }
+    .si-icon-btn#si_close { width: 40px; height: 40px; }
+}
+
+/* --------- 每楼生图按钮 --------- */
+.mes_button.si_mes_gen {
+    cursor: pointer;
+    color: #b9a6ff;
+    transition: color .15s, transform .15s;
+}
+
+.mes_button.si_mes_gen:hover {
+    color: #e0d4ff;
+    transform: scale(1.15);
+}
+
+/* 生成中：旋转 */
+.mes_button.si_mes_gen.si-loading {
+    color: #f0509b;
+    animation: si-rotate 1s linear infinite;
+    pointer-events: none;
+    opacity: .9;
+}
+
+/* 触屏下加大点击区域 */
+@media (pointer: coarse) {
+    .mes_button.si_mes_gen {
+        min-width: 32px;
+        min-height: 32px;
+    }
+}
+
+/* --------- 诊断结果块 --------- */
+.si-diag {
+    flex: 0 0 auto;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid rgba(255, 255, 255, .1);
+    padding: 10px;
+    font-size: .82em;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.si-diag.si-hidden { display: none; }
+
+.si-diag .si-pv-body {
+    max-height: none;
+    word-break: break-all;
+}
+
+.si-mono {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: .92em;
+    color: #9ea8c0;
+}
+
+.si-diag-ok { color: #6ee7a0; font-weight: 600; }
+.si-diag-bad { color: #ff8f8f; font-weight: 600; }
+
+/* --------- 正文内穿插图片 --------- */
+.si-inline-fig {
+    display: block;
+    margin: 14px 0;
+    text-align: center;
+}
+
+.si-inline-fig img {
+    max-width: 100%;
+    max-height: 460px;
+    border-radius: 12px;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, .45);
+    cursor: zoom-in;
+    transition: transform .2s;
+}
+
+.si-inline-fig img:hover { transform: scale(1.015); }
+
+.si-inline-fig figcaption {
+    margin-top: 6px;
+    font-size: .76em;
+    line-height: 1.4;
+    color: #8e8ea6;
+    word-break: break-word;
+}

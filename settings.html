@@ -1,0 +1,200 @@
+<div id="st-imagegen-settings">
+
+  <!-- 悬浮面板 -->
+  <div id="si-panel" class="si-panel si-hidden">
+    <div class="si-head">
+      <div class="si-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path fill="currentColor" d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2ZM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5Z"/>
+        </svg>
+        <span>文生图</span>
+      </div>
+      <div class="si-head-actions">
+        <button class="si-icon-btn" id="si_close" title="收起" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="si-body">
+
+      <!-- 快捷操作 -->
+      <div class="si-quick">
+        <button class="si-main-btn" id="si_draw" type="button">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg>
+          画一张
+        </button>
+        <button class="si-ghost-btn" id="si_preview_prompt" type="button" title="看当前会发什么提示词">预览词</button>
+        <button class="si-ghost-btn" id="si_test" type="button">测连接</button>
+        <button class="si-ghost-btn" id="si_diagnose" type="button" title="发一个最小请求，显示完整响应">诊断</button>
+      </div>
+
+      <div id="si-diag" class="si-diag si-hidden"></div>
+
+      <div id="si-result" class="si-result si-hidden"></div>
+      <div id="si-prompt-preview" class="si-pv si-hidden"></div>
+
+      <!-- 折叠分组 -->
+      <details class="si-sec" open>
+        <summary><span>接口</span><span class="si-sec-hint" id="si-url_hint">官方 / 第三方中转</span></summary>
+        <div class="si-fields">
+          <label class="si-f"><span>Base URL</span>
+            <input type="text" id="si_url" class="text_pole" placeholder="https://image.novelai.net">
+          </label>
+          <label class="si-f"><span>Token</span>
+            <input type="password" id="si_api_key" class="text_pole" placeholder="第三方密钥或 pst- Token，按你的中转要求填">
+          </label>
+          <label class="si-f si-f-col"><span>接口路径（留空=自动 /ai/generate-image）</span>
+            <input type="text" id="si_api_path" class="text_pole" placeholder="若中转路径不同，填如 /v1/images/generations">
+          </label>
+          <label class="si-f"><span>模型</span>
+            <select id="si_model" class="text_pole">
+              <option value="nai-diffusion-4-5-full">V4.5 Full（推荐）</option>
+              <option value="nai-diffusion-4-5-curated">V4.5 Curated</option>
+              <option value="nai-diffusion-4-full">V4 Full</option>
+              <option value="nai-diffusion-4-curated-preview">V4 Curated</option>
+              <option value="nai-diffusion-3">V3</option>
+            </select>
+          </label>
+        </div>
+      </details>
+
+      <details class="si-sec" open>
+        <summary><span>② Tag 生成接口</span><span class="si-sec-hint" id="si_tag_hint">酒馆模型</span></summary>
+        <div class="si-fields">
+          <label class="checkbox_label si-check">
+            <input type="checkbox" id="si_use_ai">
+            <span>启用 AI 生成 tag（强烈建议开，否则画不准）</span>
+          </label>
+          <label class="checkbox_label si-check">
+            <input type="checkbox" id="si_allow_local">
+            <span>AI 失败时用本地词表兜底（可能画出无关内容）</span>
+          </label>
+          <label class="si-f"><span>Tag 来源</span>
+            <select id="si_tag_source" class="text_pole">
+              <option value="tavern">用酒馆当前聊天模型</option>
+              <option value="external">用独立接口（OpenAI 兼容）</option>
+            </select>
+          </label>
+          <div class="si-tag-ext si-hidden" id="si_tag_ext_box">
+            <label class="si-f"><span>Tag 接口 URL</span>
+              <input type="text" id="si_tag_url" class="text_pole" placeholder="https://api.openai.com">
+            </label>
+            <label class="si-f"><span>Tag 接口 Key</span>
+              <input type="password" id="si_tag_api_key" class="text_pole" placeholder="sk-...">
+            </label>
+            <label class="si-f"><span>Tag 模型</span>
+              <input type="text" id="si_tag_model" class="text_pole" placeholder="gpt-4o-mini">
+            </label>
+            <button class="si-ghost-btn si-full" id="si_test_tag" type="button">测试 Tag 接口</button>
+          </div>
+          <label class="si-f"><span>输出模式</span>
+            <select id="si_prompt_mode" class="text_pole"></select>
+          </label>
+          <label class="si-f"><span>画风</span>
+            <select id="si_style" class="text_pole"></select>
+          </label>
+          <label class="si-f si-f-col"><span>角色外观（固定 tag）</span>
+            <textarea id="si_char_appearance" class="text_pole" rows="2" placeholder="1girl, long silver hair, red eyes, black long coat"></textarea>
+          </label>
+          <button class="si-ghost-btn si-full" id="si_remember_char" type="button">记住当前角色外观</button>
+          <label class="si-f si-f-col"><span>固定前缀</span>
+            <textarea id="si_style_prefix" class="text_pole" rows="2" placeholder="留空即可；如 official art, intricate detail"></textarea>
+          </label>
+          <label class="si-f si-f-col"><span>补充要求</span>
+            <textarea id="si_extra_hint" class="text_pole" rows="2" placeholder="如：竖构图，半身，床边暖光"></textarea>
+          </label>
+          <label class="si-f si-f-col"><span>额外负向词</span>
+            <textarea id="si_negative" class="text_pole" rows="2" placeholder="留空即可，官方 ucPreset 已处理常见崩坏"></textarea>
+          </label>
+        </div>
+      </details>
+
+      <details class="si-sec">
+        <summary><span>成人向</span><span class="si-sec-hint" id="si-adult-hint">需 V4.5 Full</span></summary>
+        <div class="si-fields">
+          <label class="si-f"><span>强度</span>
+            <select id="si_adult" class="text_pole"></select>
+          </label>
+          <div class="si-note">
+            用 <b>V4.5 Full</b> 才出得来；Curated 会自我审查。
+            「强」补裸露与体态词，「极强」额外补性行为词并强制排除 censored。
+            未成年人相关 tag 会被强制写进负向词。
+          </div>
+        </div>
+      </details>
+
+      <details class="si-sec">
+        <summary><span>画面参数</span><span class="si-sec-hint">832×1216</span></summary>
+        <div class="si-grid2">
+          <label class="si-f"><span>宽</span><input type="number" id="si_width" class="text_pole" min="64" max="2048" step="64"></label>
+          <label class="si-f"><span>高</span><input type="number" id="si_height" class="text_pole" min="64" max="2048" step="64"></label>
+          <label class="si-f"><span>步数</span><input type="number" id="si_steps" class="text_pole" min="1" max="50"></label>
+          <label class="si-f"><span>引导</span><input type="number" id="si_cfg" class="text_pole" min="0" max="10" step="0.1"></label>
+          <label class="si-f"><span>采样器</span>
+            <select id="si_sampler" class="text_pole">
+              <option value="k_euler_ancestral">k_euler_ancestral</option>
+              <option value="k_euler">k_euler</option>
+              <option value="k_dpmpp_2m">k_dpmpp_2m</option>
+              <option value="k_dpmpp_sde">k_dpmpp_sde</option>
+              <option value="k_dpmpp_2s_ancestral">k_dpmpp_2s_ancestral</option>
+              <option value="k_dpm_2">k_dpm_2</option>
+              <option value="k_dpm_2_ancestral">k_dpm_2_ancestral</option>
+              <option value="ddim">ddim</option>
+              <option value="k_lms">k_lms</option>
+              <option value="k_heun">k_heun</option>
+            </select>
+          </label>
+          <label class="si-f"><span>SMEA</span><select id="si_smea" class="text_pole"></select></label>
+          <label class="si-f"><span>种子</span><input type="number" id="si_seed" class="text_pole" placeholder="-1 随机"></label>
+          <label class="si-f"><span>CFG 重标</span><input type="number" id="si_cfg_rescale" class="text_pole" min="0" max="1" step="0.02"></label>
+          <label class="si-f"><span>负向预设</span><select id="si_uc_preset" class="text_pole"></select></label>
+          <label class="checkbox_label si-check si-span2">
+            <input type="checkbox" id="si_quality">
+            <span>自动加质量 tag（best quality…）</span>
+          </label>
+        </div>
+      </details>
+
+      <details class="si-sec">
+        <summary><span>自动 / 输出</span><span class="si-sec-hint" id="si-auto-hint">关闭</span></summary>
+        <div class="si-fields">
+          <label class="si-f"><span>自动出图</span>
+            <select id="si_auto_mode" class="text_pole">
+              <option value="off">关闭（手动）</option>
+              <option value="interval">每 N 条 AI 回复</option>
+              <option value="keyword">命中关键词</option>
+            </select>
+          </label>
+          <div class="si-grid2">
+            <label class="si-f"><span>每 N 条</span><input type="number" id="si_auto_every" class="text_pole" min="1" max="50"></label>
+            <label class="si-f"><span>每楼图数</span>
+              <input type="number" id="si_per_msg" class="text_pole" min="1" max="8" value="3">
+            </label>
+            <label class="si-f"><span>输出</span>
+              <select id="si_insert_mode" class="text_pole">
+                <option value="inline">穿插到正文段落</option>
+                <option value="message">追加为独立消息</option>
+                <option value="toast">仅面板预览</option>
+              </select>
+            </label>
+          </div>
+          <label class="si-f si-f-col"><span>关键词</span>
+            <textarea id="si_auto_keywords" class="text_pole" rows="2"></textarea>
+          </label>
+          <label class="checkbox_label si-check">
+            <input type="checkbox" id="si_show_prompt">
+            <span>图片下方显示提示词</span>
+          </label>
+          <label class="checkbox_label si-check">
+            <input type="checkbox" id="si_enabled">
+            <span>总开关</span>
+          </label>
+        </div>
+      </details>
+
+      <div class="si-foot">聊天框输入 <code>/img</code> 快速出图</div>
+    </div>
+  </div>
+
+</div>
